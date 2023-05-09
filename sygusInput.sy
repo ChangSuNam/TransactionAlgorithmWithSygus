@@ -1,0 +1,37 @@
+(set-option :produce-models true)
+(set-logic QF_AUFLIRA)
+
+(define-sort Index () Int)
+
+(declare-fun mov-avg ((Array Index Real) Index) Real)
+
+(declare-fun compare-ma (Real Real Real) Int)
+
+(define-fun-rec mov-avg ((prices (Array Index Real)) (days Index)) Real
+    (ite (= days 0)
+         0
+         (+ (/ (select prices (- (+ days 1) days)) days)
+            (* (/ (- days 1) days)
+               (mov-avg prices (- days 1) )))))
+
+(define-fun-rec compare-ma ((shortma Real) (longma Real) (threshold Real)) Int
+    (ite (> shortma (+ longma threshold))
+         1
+         0))
+
+(assert (forall ((prices (Array Index Real)) (days Index))
+          (= (mov-avg prices days)
+             (ite (= days 0)
+                  0
+                  (+ (/ (select prices (- (+ days 1) days)) days)
+                     (* (/ (- days 1) days)
+                        (mov-avg prices (- days 1))))))))
+
+(assert (forall ((shortma Real) (longma Real) (threshold Real))
+          (= (compare-ma shortma longma threshold)
+             (ite (> shortma (+ longma threshold))
+                  1
+                  0))))
+
+(check-sat)
+(get-model)
